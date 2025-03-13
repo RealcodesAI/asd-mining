@@ -1,0 +1,29 @@
+{
+  "name": "asd-mining",
+  "version": "1.0.1",
+  "description": "A browser-compatible cryptocurrency mining library for EVM blockchains",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cryptocurrency",
+    "mining",
+    "blockchain",
+    "ethereum",
+    "evm",
+    "browser"
+  ],
+  "author": "lilhuy0405",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/asd-mining.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/asd-mining/issues"
+  },
+  "homepage": "https://github.com/yourusername/asd-mining#readme"
+}

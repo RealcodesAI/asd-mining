@@ -1,0 +1,8 @@
+.git
+.github
+node_modules
+.gitignore
+.npmrc
+.DS_Store
+*.log
+.idea/
