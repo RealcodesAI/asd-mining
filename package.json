@@ -1,6 +1,6 @@
 {
   "name": "asd-mining",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A browser-compatible cryptocurrency mining library for EVM blockchains",
   "main": "index.js",
   "types": "index.d.ts",
