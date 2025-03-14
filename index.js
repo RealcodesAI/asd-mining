@@ -4,6 +4,14 @@ class AsdMining {
   apiUrl
   pingIntervalId = null
 
+  static instance = null
+
+  static getInstance(license, apiUrl) {
+    if (!AsdMining.instance) {
+      AsdMining.instance = new AsdMining(license, apiUrl)
+    }
+    return AsdMining.instance
+  }
   constructor(license, apiUrl) {
     this.license = license
     this.apiUrl = apiUrl

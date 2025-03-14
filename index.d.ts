@@ -3,13 +3,22 @@ declare class AsdMining {
   isMining: boolean;
   apiUrl: string;
   pingIntervalId: number | null;
+  static instance: AsdMining | null;
 
   /**
    * Creates an instance of AsdMining.
    * @param {string} license - The license key for mining
    * @param {string} apiUrl - The API URL for the mining pool
    */
-  constructor(license: string, apiUrl: string);
+  private constructor(license: string, apiUrl: string);
+
+  /**
+   * Creates an instance of AsdMining.
+   * @param {string} license - The license key for mining
+   * @param {string} apiUrl - The API URL for the mining pool
+   * @returns {AsdMining}
+   */
+  static getInstance(license: string, apiUrl: string): AsdMining;
 
   /**
    * Starts the mining process
