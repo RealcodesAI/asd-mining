@@ -1,7 +1,7 @@
 import AsdMining from './index.js';
 
 // Initialize the miner
-const miner = new AsdMining('demo-license', 'https://be.asdscan.ai');
+const miner = AsdMining.getInstance('demo-license', 'https://be.asdscan.ai');
 
 // First, benchmark the device
 console.log('Benchmarking your device...');

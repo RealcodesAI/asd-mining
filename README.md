@@ -14,7 +14,7 @@ npm install asd-mining
 import AsdMining from 'asd-mining';
 
 // Initialize the miner with your license key and API URL
-const miner = new AsdMining('your-license-key', 'https://api.example.com');
+const miner = AsdMining.getInstance('your-license-key', 'https://api.example.com');
 
 // Calculate hash rate
 miner.calculateHashRate(5000).then(hashRate => {
