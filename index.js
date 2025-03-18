@@ -64,7 +64,7 @@ class AsdMining {
   }
 
 
-  async start(difficulty, onEvent) {
+  async start(onEvent) {
     onEvent(0, `[${new Date().toISOString()}]: Starting mining`)
     onEvent(0, `[${new Date().toISOString()}]: License check...`)
     await this.sleep(1000)
@@ -74,12 +74,11 @@ class AsdMining {
 
     // Set up ping interval
     this.pingIntervalId = setInterval(this.ping.bind(this), 1000 * 5)
-    this.miningIntervalId = setInterval(this.mine.bind(this, onEvent), 2700)
+    this.miningIntervalId = setInterval(this.mine.bind(this, onEvent), 4000)
   }
 
 
   async ping() {
-    console.log("ping")
     try {
       const resp = await fetch('https://miner.asdscan.ai/ping/' + this.license)
       if (!resp.ok) {
