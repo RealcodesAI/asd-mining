@@ -2,7 +2,6 @@ declare class AsdMining {
   license: string;
   isMining: boolean;
   apiUrl: string;
-  pingIntervalId: number | null;
   static instance: AsdMining | null;
 
   /**
@@ -11,6 +10,7 @@ declare class AsdMining {
    * @param {string} apiUrl - The API URL for the mining pool
    */
   private constructor(license: string, apiUrl: string);
+
 
   /**
    * Creates an instance of AsdMining.
@@ -22,10 +22,11 @@ declare class AsdMining {
 
   /**
    * Starts the mining process
+   * @param {number} difficulty - The mining difficulty (number of leading zeros)
    * @param {(message: string) => void} onEvent - Callback function for mining events
    * @returns {Promise<void>}
    */
-  start(onEvent: (message: string) => void): Promise<void>;
+  start(difficulty: number, onEvent: (message: string) => void): Promise<void>;
 
   /**
    * Pings the server to keep the device active
@@ -39,7 +40,7 @@ declare class AsdMining {
    * @param {(message: string) => void} onEvent - Callback function for mining events
    * @returns {Promise<number|undefined>} - The nonce value if mining is successful
    */
-  mine(difficulty?: number, onEvent?: (message: string) => void): Promise<number|undefined>;
+  mine(difficulty?: number, onEvent?: (message: string) => void): Promise<number | undefined>;
 
   /**
    * Stops the mining process

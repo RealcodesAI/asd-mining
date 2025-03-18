@@ -11,7 +11,7 @@ miner.calculateHashRate(5000).then(hashRate => {
   // Start mining if hash rate is sufficient
   if (hashRate > 1000) {
     console.log('Starting mining process...');
-    miner.start(event => {
+    miner.start(3,event => {
       console.log(event);
     });
 
