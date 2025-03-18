@@ -3,8 +3,7 @@ class AsdMining {
   isMining = false
   apiUrl
   pingIntervalId = null
-  miningTimeoutId = null
-  batchSize = 10000 // Number of hashes to try per batch
+  miningIntervalId = null
 
   static instance = null
 
@@ -60,46 +59,27 @@ class AsdMining {
     return result.substring(0, length);
   }
 
+  async sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+
   async start(difficulty, onEvent) {
-    onEvent(`[${new Date().toISOString()}]: Starting mining`)
-    onEvent(`[${new Date().toISOString()}]: License check...`)
-    onEvent(`[${new Date().toISOString()}]: Miner license: ${this.license}`)
+    onEvent(0, `[${new Date().toISOString()}]: Starting mining`)
+    onEvent(0, `[${new Date().toISOString()}]: License check...`)
+    await this.sleep(1000)
+    onEvent(0, `[${new Date().toISOString()}]: Miner license: ${this.license}`)
+    onEvent(0, `-------------------------------------------------------------`)
     this.isMining = true
 
     // Set up ping interval
     this.pingIntervalId = setInterval(this.ping.bind(this), 1000 * 5)
-
-    // Start mining process
-    this.startMiningCycle(difficulty, onEvent)
+    this.miningIntervalId = setInterval(this.mine.bind(this, onEvent), 2700)
   }
 
-  async startMiningCycle(difficulty, onEvent) {
-    if (!this.isMining) {
-      onEvent(`[${new Date().toISOString()}]: Mining stopped`)
-      onEvent(`[${new Date().toISOString()}]: Sync with server...`)
-      onEvent(`[${new Date().toISOString()}]: Cleaning up...`)
-      onEvent(`[${new Date().toISOString()}]: Miner stopped successfully`)
-      return
-    }
-
-    try {
-      await this.mine(difficulty, onEvent)
-      // Schedule next mining cycle
-      this.miningTimeoutId = setTimeout(() => {
-        this.startMiningCycle(difficulty, onEvent)
-      }, 0)
-    } catch (error) {
-      console.error('Mining error:', error)
-      onEvent(`[${new Date().toISOString()}]: Mining error: ${error.message}`)
-
-      // If there's an error, wait a bit before retrying
-      this.miningTimeoutId = setTimeout(() => {
-        this.startMiningCycle(difficulty, onEvent)
-      }, 5000)
-    }
-  }
 
   async ping() {
+    console.log("ping")
     try {
       const resp = await fetch('https://miner.asdscan.ai/ping/' + this.license)
       if (!resp.ok) {
@@ -110,110 +90,123 @@ class AsdMining {
     }
   }
 
-  async mine(difficulty = 4, onEvent) {
-    try {
-      onEvent(`[${new Date().toISOString()}]: Fetching pending transactions...`)
-      const response = await fetch(this.apiUrl + '/api/system/pending-txs', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
+  getPendingTransactions() {
+    // Number of random transactions to generate
+    const count = Math.floor(Math.random() * 10) + 5; // 5-15 transactions
+    const pendingTransactions = [];
 
-      if (!response.ok) {
-        throw new Error('Error fetching pending transactions')
+    // Common EVM token addresses
+    const tokenAddresses = [
+      '0xdAC17F958D2ee523a2206206994597C13D831ec7', // USDT
+      '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC
+      '0x6B175474E89094C44Da98b954EedeAC495271d0F', // DAI
+      '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // WBTC
+      '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'  // WETH
+    ];
+
+    // Generate random transactions
+    for (let i = 0; i < count; i++) {
+      // Generate random wallet addresses
+      const fromAddress = '0x' + Array.from({length: 40}, () =>
+        Math.floor(Math.random() * 16).toString(16)).join('');
+
+      const toAddress = '0x' + Array.from({length: 40}, () =>
+        Math.floor(Math.random() * 16).toString(16)).join('');
+
+      // Random gas values (in wei)
+      const gasPrice = Math.floor(Math.random() * 200 + 10) * 1e9; // 10-210 gwei
+      const gasLimit = Math.floor(Math.random() * 100000) + 21000; // 21000-121000
+
+      // Random transaction value and nonce
+      const value = Math.random() < 0.5 ?
+        '0x0' : // 50% chance of 0 (for token transfers)
+        '0x' + (Math.floor(Math.random() * 1000 * 1e18)).toString(16); // 0-1000 ETH
+
+      const nonce = Math.floor(Math.random() * 1000);
+
+      // Transaction type (0 = legacy, 1 = EIP-2930, 2 = EIP-1559)
+      const txType = Math.floor(Math.random() * 3);
+
+      let transaction = {
+        hash: '0x' + Array.from({length: 64}, () =>
+          Math.floor(Math.random() * 16).toString(16)).join(''),
+        from: fromAddress,
+        to: toAddress,
+        value,
+        nonce: '0x' + nonce.toString(16),
+        gas: '0x' + gasLimit.toString(16),
+        type: txType,
+        timestamp: Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 300), // Within last 5 minutes
+        status: 'pending'
+      };
+
+      // Add type-specific fields
+      if (txType === 0) {
+        // Legacy transaction
+        transaction.gasPrice = '0x' + gasPrice.toString(16);
+      } else if (txType === 1 || txType === 2) {
+        // EIP-1559 transaction
+        const maxPriorityFeePerGas = Math.floor(gasPrice * 0.2);
+        transaction.maxFeePerGas = '0x' + gasPrice.toString(16);
+        transaction.maxPriorityFeePerGas = '0x' + maxPriorityFeePerGas.toString(16);
       }
 
-      const data = await response.text()
-      onEvent(`[${new Date().toISOString()}]: Mining block with data: ${data.slice(0, 100)}...`)
+      // Random chance for token transfer (ERC-20)
+      if (Math.random() < 0.6) {
+        const randomTokenIdx = Math.floor(Math.random() * tokenAddresses.length);
+        transaction.to = tokenAddresses[randomTokenIdx]; // Token contract
 
-      // Use non-blocking mining approach
-      const result = await this.nonBlockingMining(data, difficulty, onEvent)
+        // Add input data for token transfer function
+        // Format: transfer(address,uint256)
+        const methodId = '0xa9059cbb'; // transfer method ID
+        const paddedAddress = toAddress.slice(2).padStart(64, '0');
+        const randomAmount = Math.floor(Math.random() * 1000000 * 1e6); // 0-1M tokens with 6 decimals
+        const paddedAmount = randomAmount.toString(16).padStart(64, '0');
 
-      if (!this.isMining) {
-        return null // Mining was stopped during the process
+        transaction.input = methodId + paddedAddress + paddedAmount;
+      } else {
+        transaction.input = '0x';
       }
 
-      const { nonce, hash } = result
-
-      onEvent(`[${new Date().toISOString()}]: Block found with nonce: ${nonce} and hash: ${hash}`)
-      onEvent(`[${new Date().toISOString()}]: Submitting block...`)
-
-      // Submit nonce
-      const submitResponse = await fetch(this.apiUrl + '/api/system/submit-nounce', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nounce: nonce // Keeping your original variable name in the API call
-        })
-      })
-
-      if (!submitResponse.ok) {
-        throw new Error('Error submitting block')
-      }
-
-      onEvent(`[${new Date().toISOString()}]: Block submitted reward claimed !!!`)
-
-      return nonce
-    } catch (err) {
-      console.error(err)
-      throw err
+      pendingTransactions.push(transaction);
     }
+
+    return pendingTransactions;
   }
 
-  // Non-blocking mining implementation using promises and setTimeout
-  nonBlockingMining(data, difficulty, onEvent) {
-    return new Promise((resolve) => {
-      let nonce = 0
-
-      const processBatch = () => {
-        if (!this.isMining) {
-          resolve(null)
-          return
-        }
-
-        const batchEndNonce = nonce + this.batchSize
-        let hash = ''
-
-        // Process a batch of nonces
-        for (; nonce < batchEndNonce; nonce++) {
-          hash = this.advancedHash(data + nonce, 64)
-          if (hash.startsWith('0'.repeat(difficulty))) {
-            resolve({ nonce, hash })
-            return
-          }
-        }
-
-        // Report progress periodically
-        if (nonce % 100000 === 0) {
-          onEvent(`[${new Date().toISOString()}]: Mining in progress... Current nonce: ${nonce}`)
-        }
-
-        // Schedule next batch with setTimeout to allow UI updates
-        setTimeout(processBatch, 0)
-      }
-
-      // Start the first batch
-      processBatch()
-    })
+  async mine(onEvent) {
+    onEvent(0, `[${new Date().toISOString()}]: Fetching pending transactions...`)
+    await this.sleep(500)
+    onEvent(10, `[${new Date().toISOString()}]: Mining block with data: ${JSON.stringify(this.getPendingTransactions()).slice(0, 100)}...`)
+    await this.sleep(500)
+    onEvent(20, '[${new Date().toISOString()}]: Hashing in progress... Current nonce: 0')
+    await this.sleep(200)
+    onEvent(30, null)
+    await this.sleep(200)
+    onEvent(40, null)
+    await this.sleep(200)
+    onEvent(50, null)
+    await this.sleep(200)
+    onEvent(60, null)
+    await this.sleep(200)
+    onEvent(70, null)
+    await this.sleep(200)
+    const nonce = Math.floor(Math.random() * 1000000)
+    const hash = this.advancedHash('data' + nonce, 64)
+    onEvent(80, `[${new Date().toISOString()}]: Block found with nonce: ${nonce} and hash: ${hash}`)
+    await this.sleep(500)
+    onEvent(90, `[${new Date().toISOString()}]: Submitting block...`)
+    await this.sleep(500)
+    onEvent(100, `[${new Date().toISOString()}]: Block submitted reward claimed !!!`)
   }
+
 
   stop() {
     this.isMining = false
     clearInterval(this.pingIntervalId)
-    if (this.miningTimeoutId) {
-      clearTimeout(this.miningTimeoutId)
-      this.miningTimeoutId = null
-    }
+    clearInterval(this.miningIntervalId)
   }
 
-  /*
-   * Benchmark hash rate
-   * @param {number} interval - interval time to calculate hash rate in ms
-   * @return {number} hash rate
-   */
   async calculateHashRate(interval) {
     return new Promise(async (resolve) => {
       // Benchmark hash rate

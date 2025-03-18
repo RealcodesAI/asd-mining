@@ -22,8 +22,8 @@ miner.calculateHashRate(5000).then(hashRate => {
 });
 
 // Start mining
-miner.start(event => {
-  console.log(event); // Log mining events
+miner.start((progress, event) => {
+  console.log(progress, event); // Log mining events
 });
 
 // Stop mining

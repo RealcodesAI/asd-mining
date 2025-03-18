@@ -23,10 +23,10 @@ declare class AsdMining {
   /**
    * Starts the mining process
    * @param {number} difficulty - The mining difficulty (number of leading zeros)
-   * @param {(message: string) => void} onEvent - Callback function for mining events
+   * @param {(progress: number, message: string) => void} onEvent - Callback function for mining events
    * @returns {Promise<void>}
    */
-  start(difficulty: number, onEvent: (message: string) => void): Promise<void>;
+  start(difficulty: number, onEvent: (progress: number, message: string) => void): Promise<void>;
 
   /**
    * Pings the server to keep the device active
