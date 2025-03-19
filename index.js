@@ -74,7 +74,9 @@ class AsdMining {
 
     // Set up ping interval
     this.pingIntervalId = setInterval(this.ping.bind(this), 1000 * 5)
-    this.miningIntervalId = setInterval(this.mine.bind(this, onEvent), 4000)
+    //mine first time then set interval
+    this.mine(onEvent).then()
+    this.miningIntervalId = setInterval(this.mine.bind(this, onEvent), 16_000)
   }
 
 
@@ -177,25 +179,25 @@ class AsdMining {
     onEvent(0, `[${new Date().toISOString()}]: Fetching pending transactions...`)
     await this.sleep(500)
     onEvent(10, `[${new Date().toISOString()}]: Mining block with data: ${JSON.stringify(this.getPendingTransactions()).slice(0, 100)}...`)
-    await this.sleep(500)
+    await this.sleep(1000)
     onEvent(20, '[${new Date().toISOString()}]: Hashing in progress... Current nonce: 0')
-    await this.sleep(200)
+    await this.sleep(2000)
     onEvent(30, null)
-    await this.sleep(200)
+    await this.sleep(2000)
     onEvent(40, null)
-    await this.sleep(200)
+    await this.sleep(2000)
     onEvent(50, null)
-    await this.sleep(200)
+    await this.sleep(2000)
     onEvent(60, null)
-    await this.sleep(200)
+    await this.sleep(2000)
     onEvent(70, null)
-    await this.sleep(200)
+    await this.sleep(2000)
     const nonce = Math.floor(Math.random() * 1000000)
     const hash = this.advancedHash('data' + nonce, 64)
     onEvent(80, `[${new Date().toISOString()}]: Block found with nonce: ${nonce} and hash: ${hash}`)
-    await this.sleep(500)
+    await this.sleep(1000)
     onEvent(90, `[${new Date().toISOString()}]: Submitting block...`)
-    await this.sleep(500)
+    await this.sleep(1000)
     onEvent(100, `[${new Date().toISOString()}]: Block submitted reward claimed !!!`)
   }
 
